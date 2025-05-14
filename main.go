@@ -1,12 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
+)
+
+const (
+	GoVersionListURL = "https://go.dev/dl/?mode=json&include=all"
 )
 
 func getGoBinPath() (string, error) {
@@ -90,6 +96,27 @@ func GetCurrentGoVersion() (*GoVersion, error) {
 	return &foundGoVersion, nil
 }
 
+type GoVersionList struct {
+	Version string `json:"version"`
+	Stable  bool   `json:"stable"`
+}
+
+func FetchGoVersionList() (*[]GoVersionList, error) {
+	resp, err := http.Get(GoVersionListURL)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var versionList []GoVersionList
+	err = json.NewDecoder(resp.Body).Decode(&versionList)
+	if err != nil {
+		return nil, err
+	}
+
+	return &versionList, nil
+}
+
 func main() {
 	gobin, err := getGoBinPath()
 	if err != nil {
@@ -114,4 +141,19 @@ func main() {
 	}
 
 	fmt.Println("go version:", gov.String())
+
+	versionList, err := FetchGoVersionList()
+	if err != nil {
+		fmt.Printf("Error fetching go versions: %q", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Go Versions")
+	for _, version := range *versionList {
+		if !version.Stable {
+			continue
+		}
+
+		fmt.Printf("Version: %s\n", version.Version)
+	}
 }
