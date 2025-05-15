@@ -3,8 +3,14 @@ package discovery
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
+
+// ===
+// */discovery package is utilized to discover how go was installed and reading env vars
+// 		as well as discovering tool directories
+// ===
 
 // gets gobin from os env vars
 func GetGoBinPath() (string, error) {
@@ -27,5 +33,42 @@ func GetGoBinPath() (string, error) {
 	return gobin, nil
 }
 
-// validates that this is where gobin is located
-func ValidateGoBinPath() {}
+// discovers if current user has webi installed
+func IsWebiUsed() (bool, error) {
+	var goBinExists bool
+	var webiExecExists bool
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return false, err
+	}
+
+	// looking at $HOME/.local/opt
+	localOptPath := filepath.Join(userHomeDir, "/.local/opt")
+	optContents, err := os.ReadDir(localOptPath)
+	if err != nil {
+		return false, err
+	}
+
+	for _, optContent := range optContents {
+		if strings.Contains(optContent.Name(), "go") {
+			goBinExists = true
+			break
+		}
+	}
+
+	// looking at $HOME/.local/bin
+	localBinPath := filepath.Join(userHomeDir, "/.local/bin")
+	webiPath := filepath.Join(localBinPath, "/webi")
+
+	webiBinInfo, err := os.Stat(webiPath)
+	if err != nil {
+		return false, err
+	}
+
+	if webiBinInfo.Size() != 0 {
+		webiExecExists = true
+	}
+
+	return goBinExists && webiExecExists, nil
+}
