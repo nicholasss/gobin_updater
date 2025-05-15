@@ -72,3 +72,13 @@ func IsWebiUsed() (bool, error) {
 
 	return goBinExists && webiExecExists, nil
 }
+
+// returns local opt path, where webi installs go
+// $HOME/.local/opt
+func WebiInstallPath() (string, error) {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(userHomeDir, "/.local/opt"), nil
+}
