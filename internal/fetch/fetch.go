@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	GoVersionListURL = "https://go.dev/dl/?mode=json&include=all"
-	CacheDirName     = "goblin"
-	CacheFileName    = "goblin_versions.json"
+	GoVersionListURL     = "https://go.dev/dl/?mode=json&include=all"
+	CacheDirName         = "goblin"
+	CacheFileName        = "goblin_versions.json"
+	CacheExpiresDuration = time.Hour * 120 // five days
 )
 
 type GoVersionList struct {
@@ -19,6 +20,50 @@ type GoVersionList struct {
 	Stable  bool   `json:"stable"`
 }
 
+// gets go versions
+func FetchVersions() (*[]GoVersionList, error) {
+	// first checks for cache
+	exists, err := cacheFileExists()
+	if err != nil {
+		return nil, err
+	}
+
+	// check age
+	if exists {
+		cacheExpiryTime := time.Now().Add(-CacheExpiresDuration)
+		cacheAge, err := cacheLastModified()
+		if err != nil {
+			return nil, err
+		}
+
+		if !cacheAge.Before(cacheExpiryTime) {
+			// cache is not expired, load and return
+			versionList, err := loadFromCache()
+			if err != nil {
+				return nil, err
+			}
+
+			return versionList, nil
+		}
+
+	}
+
+	// cache either does not exist or is expired, fetch new
+	versionList, err := fetchGoVersionList()
+	if err != nil {
+		return nil, err
+	}
+
+	// save to disk
+	err = saveToCache(versionList)
+	if err != nil {
+		return nil, err
+	}
+
+	return versionList, nil
+}
+
+// utility function to get the filepath of the cache
 func getCacheFilePath() (string, error) {
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
@@ -35,6 +80,24 @@ func getCacheFilePath() (string, error) {
 	return toolCachePath, nil
 }
 
+func cacheFileExists() (bool, error) {
+	toolCachePath, err := getCacheFilePath()
+	if err != nil {
+		return false, err
+	}
+
+	_, err = os.Stat(toolCachePath)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// checks the cache for when it was last modified
 func cacheLastModified() (time.Time, error) {
 	toolCachePath, err := getCacheFilePath()
 	if err != nil {
@@ -49,6 +112,7 @@ func cacheLastModified() (time.Time, error) {
 	return cacheInfo.ModTime(), nil
 }
 
+// loads the file from cache
 func loadFromCache() (*[]GoVersionList, error) {
 	toolCachePath, err := getCacheFilePath()
 	if err != nil {
@@ -69,6 +133,7 @@ func loadFromCache() (*[]GoVersionList, error) {
 	return goVersionList, nil
 }
 
+// saves the go versions to cache
 func saveToCache(versionList *[]GoVersionList) error {
 	toolCachePath, err := getCacheFilePath()
 	if err != nil {
@@ -90,8 +155,8 @@ func saveToCache(versionList *[]GoVersionList) error {
 	return nil
 }
 
-// fetches version list
-func FetchGoVersionList() (*[]GoVersionList, error) {
+// fetches version list from online
+func fetchGoVersionList() (*[]GoVersionList, error) {
 	resp, err := http.Get(GoVersionListURL)
 	if err != nil {
 		return nil, err
