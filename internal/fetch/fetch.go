@@ -10,8 +10,8 @@ import (
 
 const (
 	GoVersionListURL     = "https://go.dev/dl/?mode=json&include=all"
-	CacheDirName         = "goblin"
-	CacheFileName        = "goblin_versions.json"
+	CacheDirName         = "gobin_updater"
+	CacheFileName        = "go_versions.json"
 	CacheExpiresDuration = time.Hour * 120 // five days
 )
 
