@@ -61,7 +61,7 @@ func main() {
 
 	fmt.Println("=======================================")
 	fmt.Println("Runtime Golang Version:", currentGoVersion.String())
-	fmt.Println("=======================================")
+	fmt.Println("")
 
 	installedGoToolList, err := inventory.ListToolsInGoBin(GOBINPath)
 	if err != nil {
@@ -70,10 +70,12 @@ func main() {
 	}
 
 	fmt.Println("=======================================")
-	fmt.Println("Installed Golang Bin Tools")
+	fmt.Println("$GOBIN Path:", GOBINPath)
+	fmt.Println("Currently installed tools")
 	for _, tool := range installedGoToolList {
 		fmt.Printf(" - %s\n", tool)
 	}
+	fmt.Println("")
 
 	// versionList, err := fetch.FetchGoVersionList()
 	// if err != nil {
