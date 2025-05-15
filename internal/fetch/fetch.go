@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -18,25 +19,62 @@ type GoVersionList struct {
 	Stable  bool   `json:"stable"`
 }
 
-func checkForCache()
-
-func loadFromCache()
-
-func saveToCache(versionList *[]GoVersionList) error {
-	// get cache path
+func getCacheFilePath() (string, error) {
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	toolCacheDir := filepath.Join(cacheDir, CacheDirName)
 	err = os.MkdirAll(toolCacheDir, 0755)
 	if err != nil {
+		return "", err
+	}
+
+	toolCachePath := filepath.Join(toolCacheDir, CacheFileName)
+	return toolCachePath, nil
+}
+
+func cacheLastModified() (time.Time, error) {
+	toolCachePath, err := getCacheFilePath()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	cacheInfo, err := os.Stat(toolCachePath)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return cacheInfo.ModTime(), nil
+}
+
+func loadFromCache() (*[]GoVersionList, error) {
+	toolCachePath, err := getCacheFilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheFile, err := os.Open(toolCachePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var goVersionList *[]GoVersionList
+	err = json.NewDecoder(cacheFile).Decode(goVersionList)
+	if err != nil {
+		return nil, err
+	}
+
+	return goVersionList, nil
+}
+
+func saveToCache(versionList *[]GoVersionList) error {
+	toolCachePath, err := getCacheFilePath()
+	if err != nil {
 		return err
 	}
 
-	// create dir if needed
-	toolCachePath := filepath.Join(toolCacheDir, CacheFileName)
 	toolCacheFile, err := os.Create(toolCachePath)
 	if err != nil {
 		return err
