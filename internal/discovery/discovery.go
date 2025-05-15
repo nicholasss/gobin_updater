@@ -82,3 +82,20 @@ func WebiInstallPath() (string, error) {
 	}
 	return filepath.Join(userHomeDir, "/.local/opt"), nil
 }
+
+func PathsMatch(pathA, pathB string) (bool, error) {
+	pathAInfo, err := os.Stat(pathA)
+	if err != nil {
+		return false, err
+	}
+
+	pathBInfo, err := os.Stat(pathB)
+	if err != nil {
+		return false, err
+	}
+
+	if pathAInfo.Name() == pathBInfo.Name() {
+		return true, nil
+	}
+	return false, nil
+}
