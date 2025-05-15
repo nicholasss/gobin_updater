@@ -11,11 +11,38 @@ import (
 )
 
 func main() {
+	// ===
+	// discovery stage
+	// ===
+
+	// check for gobin
 	gobin, err := discovery.GetGoBinPath()
 	if err != nil {
-		fmt.Printf("Error getting go bin path: %q", err)
+		fmt.Printf("Error discovering GOBIN: %q", err)
 		os.Exit(1)
 	}
+
+	// check for webi
+	ok, err := discovery.IsWebiUsed()
+	if err != nil {
+		fmt.Printf("Error discovering if Webinstall is used: %q", err)
+		os.Exit(1)
+	}
+	if !ok {
+		fmt.Println("Webinstall is not detected. Exiting program.")
+		os.Exit(1)
+	}
+
+	// get webinstall bin path
+	webiInstallPath, err := discovery.WebiInstallPath()
+	if err != nil {
+		fmt.Printf("Error discovering Webinstall install path", err)
+		os.Exit(1)
+	}
+
+	// ===
+	// inventory stage
+	// ===
 
 	toolList, err := inventory.ListToolsInGoBin(gobin)
 	if err != nil {
