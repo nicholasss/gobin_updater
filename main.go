@@ -15,8 +15,8 @@ func main() {
 	// discovery stage
 	// ===
 
-	// check for gobin
-	gobin, err := discovery.GetGoBinPath()
+	// check for GOBINPath
+	GOBINPath, err := discovery.GetGoBinPath()
 	if err != nil {
 		fmt.Printf("Error discovering GOBIN: %q", err)
 		os.Exit(1)
@@ -40,11 +40,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// check for absolute paths
+	if discovery.PathsMatch(GOBINPath, webiInstallPath)
+
 	// ===
 	// inventory stage
 	// ===
 
-	toolList, err := inventory.ListToolsInGoBin(gobin)
+	toolList, err := inventory.ListToolsInGoBin(GOGOBINPath)
 	if err != nil {
 		fmt.Printf("Error getting go bin tools: %q", err)
 		os.Exit(1)
