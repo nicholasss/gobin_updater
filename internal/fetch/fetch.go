@@ -124,7 +124,7 @@ func loadFromCache() (*[]GoVersionList, error) {
 		return nil, err
 	}
 
-	var goVersionList *[]GoVersionList
+	goVersionList := new([]GoVersionList)
 	err = json.NewDecoder(cacheFile).Decode(goVersionList)
 	if err != nil {
 		return nil, err
