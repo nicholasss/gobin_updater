@@ -36,7 +36,7 @@ func main() {
 	// get webinstall bin path
 	webInstallPath, err := discovery.WebiInstallPath()
 	if err != nil {
-		fmt.Printf("Error discovering Webinstall install path", err)
+		fmt.Printf("Error discovering Webinstall install path: %q", err)
 		os.Exit(1)
 	}
 
@@ -46,7 +46,7 @@ func main() {
 		fmt.Println("Potential error found. Check that GOBIN and $HOME/.local/opt/ are the same.")
 	}
 	if err != nil {
-		fmt.Printf("Error matching GOBIN and WebInstallPath", err)
+		fmt.Printf("Error matching GOBIN and WebInstallPath: %q", err)
 		os.Exit(1)
 	}
 
