@@ -54,7 +54,7 @@ func main() {
 	// inventory stage
 	// ===
 
-	toolList, err := inventory.ListToolsInGoBin(GOGOBINPath)
+	toolList, err := inventory.ListToolsInGoBin(GOBINPath)
 	if err != nil {
 		fmt.Printf("Error getting go bin tools: %q", err)
 		os.Exit(1)
