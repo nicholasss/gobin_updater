@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -66,7 +67,7 @@ func (gov *GoVersion) String() string {
 	return fmt.Sprintf("%d.%d.%d", gov.Major, gov.Minor, gov.Patch)
 }
 
-func GetCurrentGoVersion() (*GoVersion, error) {
+func GetCurrentInstalledGoVersion() (*GoVersion, error) {
 	versionStr := runtime.Version()
 	versionStr = strings.TrimPrefix(versionStr, "go")
 
@@ -117,6 +118,30 @@ func FetchGoVersionList() (*[]GoVersionList, error) {
 	return &versionList, nil
 }
 
+// specific to webinstall path
+// $HOME/.local/opt/
+func GetInstalledGoVersions() ([]string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	webinstallPath := filepath.Join(homeDir, "/.local/opt/")
+	webinstallDir, err := os.ReadDir(webinstallPath)
+	if err != nil {
+		return nil, err
+	}
+
+	versionNames := make([]string, 0)
+	for _, dir := range webinstallDir {
+		if !strings.Contains(dir.Name(), "go-bin-") {
+			versionNames = append(versionNames, dir.Name())
+		}
+	}
+
+	return versionNames, nil
+}
+
 func main() {
 	gobin, err := getGoBinPath()
 	if err != nil {
@@ -134,7 +159,7 @@ func main() {
 		fmt.Printf("%s\n", tool)
 	}
 
-	gov, err := GetCurrentGoVersion()
+	gov, err := GetCurrentInstalledGoVersion()
 	if err != nil {
 		fmt.Printf("Error getting current go version: %q", err)
 		os.Exit(1)
