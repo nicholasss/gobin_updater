@@ -1,155 +1,23 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
+
+	"github.com/nicholasss/gobin_updater/internal/discovery"
+	"github.com/nicholasss/gobin_updater/internal/fetch"
+	"github.com/nicholasss/gobin_updater/internal/inventory"
+	_ "github.com/nicholasss/gobin_updater/internal/updater"
 )
-
-const (
-	GoVersionListURL = "https://go.dev/dl/?mode=json&include=all"
-)
-
-func getGoBinPath() (string, error) {
-	gobin := os.Getenv("GOBIN")
-
-	if gobin == "" {
-		// If GOBIN isn't set, fallback to GOPATH/bin
-		gopath := os.Getenv("GOPATH")
-
-		if gopath == "" {
-			// Use `go env GOPATH` if GOPATH isn't explicitly set
-			out, err := exec.Command("go", "env", "GOPATH").Output()
-			if err != nil {
-				return "", err
-			}
-
-			gopath = strings.TrimSpace(string(out))
-		}
-
-		gobin = gopath + "/bin"
-	}
-
-	return gobin, nil
-}
-
-func listToolsInGoBin(dir string) ([]string, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	toolList := make([]string, 0)
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-
-		toolList = append(toolList, entry.Name())
-	}
-
-	return toolList, nil
-}
-
-type GoVersion struct {
-	Major int8
-	Minor int8
-	Patch int8
-}
-
-func (gov *GoVersion) String() string {
-	return fmt.Sprintf("%d.%d.%d", gov.Major, gov.Minor, gov.Patch)
-}
-
-func GetCurrentInstalledGoVersion() (*GoVersion, error) {
-	versionStr := runtime.Version()
-	versionStr = strings.TrimPrefix(versionStr, "go")
-
-	versionArr := strings.Split(versionStr, ".")
-
-	major, err := strconv.ParseInt(versionArr[0], 10, 8)
-	if err != nil {
-		return nil, err
-	}
-
-	minor, err := strconv.ParseInt(versionArr[1], 10, 8)
-	if err != nil {
-		return nil, err
-	}
-
-	patch, err := strconv.ParseInt(versionArr[2], 10, 8)
-	if err != nil {
-		return nil, err
-	}
-
-	foundGoVersion := GoVersion{
-		Major: int8(major),
-		Minor: int8(minor),
-		Patch: int8(patch),
-	}
-
-	return &foundGoVersion, nil
-}
-
-type GoVersionList struct {
-	Version string `json:"version"`
-	Stable  bool   `json:"stable"`
-}
-
-func FetchGoVersionList() (*[]GoVersionList, error) {
-	resp, err := http.Get(GoVersionListURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var versionList []GoVersionList
-	err = json.NewDecoder(resp.Body).Decode(&versionList)
-	if err != nil {
-		return nil, err
-	}
-
-	return &versionList, nil
-}
-
-// specific to webinstall path
-// $HOME/.local/opt/
-func GetInstalledGoVersions() ([]string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	webinstallPath := filepath.Join(homeDir, "/.local/opt/")
-	webinstallDir, err := os.ReadDir(webinstallPath)
-	if err != nil {
-		return nil, err
-	}
-
-	versionNames := make([]string, 0)
-	for _, dir := range webinstallDir {
-		if !strings.Contains(dir.Name(), "go-bin-") {
-			versionNames = append(versionNames, dir.Name())
-		}
-	}
-
-	return versionNames, nil
-}
 
 func main() {
-	gobin, err := getGoBinPath()
+	gobin, err := discovery.GetGoBinPath()
 	if err != nil {
 		fmt.Printf("Error getting go bin path: %q", err)
 		os.Exit(1)
 	}
 
-	toolList, err := listToolsInGoBin(gobin)
+	toolList, err := inventory.ListToolsInGoBin(gobin)
 	if err != nil {
 		fmt.Printf("Error getting go bin tools: %q", err)
 		os.Exit(1)
@@ -159,7 +27,7 @@ func main() {
 		fmt.Printf("%s\n", tool)
 	}
 
-	gov, err := GetCurrentInstalledGoVersion()
+	gov, err := inventory.GetCurrentInstalledGoVersion()
 	if err != nil {
 		fmt.Printf("Error getting current go version: %q", err)
 		os.Exit(1)
@@ -167,7 +35,7 @@ func main() {
 
 	fmt.Println("go version:", gov.String())
 
-	versionList, err := FetchGoVersionList()
+	versionList, err := fetch.FetchGoVersionList()
 	if err != nil {
 		fmt.Printf("Error fetching go versions: %q", err)
 		os.Exit(1)
