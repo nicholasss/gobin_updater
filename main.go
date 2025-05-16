@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/nicholasss/gobin_updater/internal/discovery"
-	"github.com/nicholasss/gobin_updater/internal/fetch"
 	"github.com/nicholasss/gobin_updater/internal/inventory"
 	_ "github.com/nicholasss/gobin_updater/internal/updater"
 )
@@ -84,12 +83,6 @@ func main() {
 
 	fmt.Println("=======================================")
 	fmt.Println("Additional Installed:")
-
-	_, err = fetch.FetchVersions()
-	if err != nil {
-		fmt.Printf("Error fetching Golang version list: %q\n", err)
-		os.Exit(1)
-	}
 
 	// inventory go versions installed in webinstall path
 	GOBINPaths, err := inventory.GetInstalledGoVersionPaths()
