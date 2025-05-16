@@ -30,7 +30,14 @@ func GetGoBinPath() (string, error) {
 		}
 		gobin = gopath + "/bin"
 	}
-	return gobin, nil
+
+	// resolve symlinks
+	resolvedGobin, err := filepath.EvalSymlinks(gobin)
+	if err != nil {
+		return "", err
+	}
+
+	return resolvedGobin, nil
 }
 
 // discovers if current user has webi installed
@@ -75,7 +82,7 @@ func IsWebiUsed() (bool, error) {
 
 // returns local opt path, where webi installs go
 // $HOME/.local/opt
-func WebiInstallPath() (string, error) {
+func WebInstallPath() (string, error) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -83,19 +90,32 @@ func WebiInstallPath() (string, error) {
 	return filepath.Join(userHomeDir, "/.local/opt"), nil
 }
 
-func PathsMatch(pathA, pathB string) (bool, error) {
-	pathAInfo, err := os.Stat(pathA)
+func PathsMatch(gobinPath, webiPath string) (bool, error) {
+	gobinPathInfo, err := os.Stat(gobinPath)
 	if err != nil {
 		return false, err
 	}
 
-	pathBInfo, err := os.Stat(pathB)
+	webiPathInfo, err := os.Stat(webiPath)
 	if err != nil {
 		return false, err
 	}
 
-	if pathAInfo.Name() == pathBInfo.Name() {
+	if gobinPath == webiPath && gobinPathInfo.Name() == webiPathInfo.Name() {
 		return true, nil
 	}
+
+	// check two up from gobin path
+	gobinPathParent := filepath.Dir(gobinPath)
+	gobinPathGrandparent := filepath.Dir(gobinPathParent)
+	gobinPathGrandparentInfo, err := os.Stat(gobinPathGrandparent)
+	if err != nil {
+		return false, err
+	}
+
+	if gobinPathGrandparent == webiPath && gobinPathGrandparentInfo.Name() == webiPathInfo.Name() {
+		return true, nil
+	}
+
 	return false, nil
 }
