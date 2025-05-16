@@ -75,9 +75,13 @@ func main() {
 
 	fmt.Println("=======================================")
 	fmt.Println("Current GOBIN Path:", currentGOBINPath)
-	fmt.Println("Currently installed tools")
-	for _, tool := range installedCurrentToolList {
-		fmt.Printf(" - %s\n", tool)
+	if len(installedCurrentToolList) != 0 {
+		fmt.Println("Currently installed tools")
+		for _, tool := range installedCurrentToolList {
+			fmt.Printf(" - %s\n", tool)
+		}
+	} else {
+		fmt.Println("No tools currently installed")
 	}
 	fmt.Println("")
 
