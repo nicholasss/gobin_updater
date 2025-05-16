@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/nicholasss/gobin_updater/internal/discovery"
+	"github.com/nicholasss/gobin_updater/internal/fetch"
 	"github.com/nicholasss/gobin_updater/internal/inventory"
 	_ "github.com/nicholasss/gobin_updater/internal/updater"
 )
@@ -55,6 +56,7 @@ func main() {
 	// inventory stage
 	// ===
 
+	// inventory of current tools
 	currentGoVersion, err := inventory.GetCurrentInstalledGoVersion()
 	if err != nil {
 		fmt.Printf("Error getting runtime Golang version: %q", err)
@@ -89,19 +91,18 @@ func main() {
 	//    - sqlc
 	//    - goose
 	// etc.
+	versionList, err := fetch.FetchVersions()
+	if err != nil {
+		fmt.Printf("Error fetching Golang version list: %q", err)
+		os.Exit(1)
+	}
 
-	// versionList, err := fetch.FetchGoVersionList()
-	// if err != nil {
-	// 	fmt.Printf("Error fetching go versions: %q", err)
-	// 	os.Exit(1)
-	// }
+	fmt.Println("Go Versions")
+	for _, version := range *versionList {
+		if !version.Stable {
+			continue
+		}
 
-	// fmt.Println("Go Versions")
-	// for _, version := range *versionList {
-	// 	if !version.Stable {
-	// 		continue
-	// 	}
-
-	// 	fmt.Printf("Version: %s\n", version.Version)
-	// }
+		fmt.Printf("Version: %s\n", version.Version)
+	}
 }
