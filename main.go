@@ -91,18 +91,12 @@ func main() {
 	//    - sqlc
 	//    - goose
 	// etc.
+
 	versionList, err := fetch.FetchVersions()
 	if err != nil {
 		fmt.Printf("Error fetching Golang version list: %q", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Go Versions")
-	for _, version := range *versionList {
-		if !version.Stable {
-			continue
-		}
-
-		fmt.Printf("Version: %s\n", version.Version)
-	}
+	// inventory go versions installed in webinstall path
 }
