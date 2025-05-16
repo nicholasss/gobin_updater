@@ -72,12 +72,23 @@ func main() {
 	}
 
 	fmt.Println("=======================================")
-	fmt.Println("$GOBIN Path:", GOBINPath)
+	fmt.Println("Current GOBIN Path:", GOBINPath)
 	fmt.Println("Currently installed tools")
 	for _, tool := range installedGoToolList {
 		fmt.Printf(" - %s\n", tool)
 	}
 	fmt.Println("")
+
+	fmt.Println("=======================================")
+	fmt.Println("Additional Installed:")
+	// TODO:
+	//  : version 1.24.1
+	//    - sqlc
+	//    - goose
+	//  : version 1.23.7
+	//    - sqlc
+	//    - goose
+	// etc.
 
 	// versionList, err := fetch.FetchGoVersionList()
 	// if err != nil {
