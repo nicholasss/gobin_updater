@@ -84,7 +84,7 @@ func GetInstalledGoVersionPaths() ([]string, error) {
 
 	paths := make([]string, 0)
 	for _, item := range webinstallDir {
-		if !strings.Contains(item.Name(), "go-bin-") {
+		if strings.Contains(item.Name(), "go-bin-") {
 			path := filepath.Join(webinstallPath, item.Name())
 			paths = append(paths, path)
 		}
