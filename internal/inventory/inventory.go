@@ -15,8 +15,17 @@ type GoVersion struct {
 	Patch int8
 }
 
-func (gov *GoVersion) String() string {
+func (gov GoVersion) String() string {
 	return fmt.Sprintf("%d.%d.%d", gov.Major, gov.Minor, gov.Patch)
+}
+
+// checks if versions are the same
+func (govA GoVersion) IsEqualTo(govB GoVersion) bool {
+	majorEquals := govA.Major == govB.Major
+	minorEquals := govA.Minor == govB.Minor
+	patchEquals := govA.Patch == govB.Patch
+
+	return majorEquals && minorEquals && patchEquals
 }
 
 func parseGoVersion(versionStr string) (GoVersion, error) {
