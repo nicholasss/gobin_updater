@@ -70,7 +70,7 @@ func ListToolsInGoBin(dir string) ([]string, error) {
 
 // specific to webinstall path
 // $HOME/.local/opt/
-func GetInstalledGoVersions() ([]string, error) {
+func GetInstalledGoVersionPaths() ([]string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -82,12 +82,13 @@ func GetInstalledGoVersions() ([]string, error) {
 		return nil, err
 	}
 
-	versionNames := make([]string, 0)
-	for _, dir := range webinstallDir {
-		if !strings.Contains(dir.Name(), "go-bin-") {
-			versionNames = append(versionNames, dir.Name())
+	paths := make([]string, 0)
+	for _, item := range webinstallDir {
+		if !strings.Contains(item.Name(), "go-bin-") {
+			path := filepath.Join(webinstallPath, item.Name())
+			paths = append(paths, path)
 		}
 	}
 
-	return versionNames, nil
+	return paths, nil
 }
