@@ -61,7 +61,6 @@ func GetCurrentInstalledGoVersion() (GoVersion, error) {
 // lists tools installed in gobin
 func ListToolsInGoBin(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
-	fmt.Println(entries)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +93,8 @@ func GetInstalledGoVersionPaths() (map[GoVersion]string, error) {
 
 	paths := make(map[GoVersion]string, 0)
 	for _, item := range webinstallDir {
-		if strings.Contains(item.Name(), "go-bin-") {
-			versionStr, _ := strings.CutPrefix(item.Name(), "go-bin-")
+		if strings.Contains(item.Name(), "go-bin-v") {
+			versionStr, _ := strings.CutPrefix(item.Name(), "go-bin-v")
 			version, err := parseGoVersion(versionStr)
 			if err != nil {
 				return nil, err
