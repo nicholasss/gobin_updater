@@ -19,25 +19,22 @@ func (gov *GoVersion) String() string {
 	return fmt.Sprintf("%d.%d.%d", gov.Major, gov.Minor, gov.Patch)
 }
 
-func GetCurrentInstalledGoVersion() (*GoVersion, error) {
-	versionStr := runtime.Version()
-	versionStr = strings.TrimPrefix(versionStr, "go")
-
+func parseGoVersion(versionStr string) (GoVersion, error) {
 	versionArr := strings.Split(versionStr, ".")
 
 	major, err := strconv.ParseInt(versionArr[0], 10, 8)
 	if err != nil {
-		return nil, err
+		return GoVersion{}, err
 	}
 
 	minor, err := strconv.ParseInt(versionArr[1], 10, 8)
 	if err != nil {
-		return nil, err
+		return GoVersion{}, err
 	}
 
 	patch, err := strconv.ParseInt(versionArr[2], 10, 8)
 	if err != nil {
-		return nil, err
+		return GoVersion{}, err
 	}
 
 	foundGoVersion := GoVersion{
@@ -46,12 +43,25 @@ func GetCurrentInstalledGoVersion() (*GoVersion, error) {
 		Patch: int8(patch),
 	}
 
-	return &foundGoVersion, nil
+	return foundGoVersion, nil
+}
+
+func GetCurrentInstalledGoVersion() (GoVersion, error) {
+	versionStr := runtime.Version()
+	versionStr = strings.TrimPrefix(versionStr, "go")
+
+	version, err := parseGoVersion(versionStr)
+	if err != nil {
+		return GoVersion{}, err
+	}
+
+	return version, nil
 }
 
 // lists tools installed in gobin
 func ListToolsInGoBin(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
+	fmt.Println(entries)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +80,7 @@ func ListToolsInGoBin(dir string) ([]string, error) {
 
 // specific to webinstall path
 // $HOME/.local/opt/
-func GetInstalledGoVersionPaths() ([]string, error) {
+func GetInstalledGoVersionPaths() (map[GoVersion]string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -82,11 +92,18 @@ func GetInstalledGoVersionPaths() ([]string, error) {
 		return nil, err
 	}
 
-	paths := make([]string, 0)
+	paths := make(map[GoVersion]string, 0)
 	for _, item := range webinstallDir {
 		if strings.Contains(item.Name(), "go-bin-") {
+			versionStr, _ := strings.CutPrefix(item.Name(), "go-bin-")
+			version, err := parseGoVersion(versionStr)
+			if err != nil {
+				return nil, err
+			}
+
 			path := filepath.Join(webinstallPath, item.Name())
-			paths = append(paths, path)
+
+			paths[version] = path
 		}
 	}
 
