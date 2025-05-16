@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/nicholasss/gobin_updater/internal/discovery"
 	"github.com/nicholasss/gobin_updater/internal/fetch"
@@ -15,8 +16,8 @@ func main() {
 	// discovery stage
 	// ===
 
-	// check for GOBINPath
-	GOBINPath, err := discovery.GetGoBinPath()
+	// check for currentGOBINPath
+	currentGOBINPath, err := discovery.GetGoBinPath()
 	if err != nil {
 		fmt.Printf("Error discovering GOBIN: %q", err)
 		os.Exit(1)
@@ -41,10 +42,10 @@ func main() {
 	}
 
 	// check for absolute paths
-	ok, err = discovery.PathsMatch(GOBINPath, webInstallPath)
+	ok, err = discovery.PathsMatch(currentGOBINPath, webInstallPath)
 	if !ok {
 		fmt.Println("Potential error found. Check that GOBIN and $HOME/.local/opt/ are the same.")
-		fmt.Println("GOBIN path:", GOBINPath)
+		fmt.Println("GOBIN path:", currentGOBINPath)
 		fmt.Println("WebInstall path:", webInstallPath)
 	}
 	if err != nil {
@@ -57,46 +58,62 @@ func main() {
 	// ===
 
 	// inventory of current tools
-	currentGoVersion, err := inventory.GetCurrentInstalledGoVersion()
+	currentVersion, err := inventory.GetCurrentInstalledGoVersion()
 	if err != nil {
 		fmt.Printf("Error getting runtime Golang version: %q", err)
 		os.Exit(1)
 	}
 
 	fmt.Println("=======================================")
-	fmt.Println("Runtime Golang Version:", currentGoVersion.String())
+	fmt.Println("Runtime Golang Version:", currentVersion.String())
 	fmt.Println("")
 
-	installedGoToolList, err := inventory.ListToolsInGoBin(GOBINPath)
+	installedCurrentToolList, err := inventory.ListToolsInGoBin(currentGOBINPath)
 	if err != nil {
 		fmt.Printf("Error getting Go bin tools: %q", err)
 		os.Exit(1)
 	}
 
 	fmt.Println("=======================================")
-	fmt.Println("Current GOBIN Path:", GOBINPath)
+	fmt.Println("Current GOBIN Path:", currentGOBINPath)
 	fmt.Println("Currently installed tools")
-	for _, tool := range installedGoToolList {
+	for _, tool := range installedCurrentToolList {
 		fmt.Printf(" - %s\n", tool)
 	}
 	fmt.Println("")
 
 	fmt.Println("=======================================")
 	fmt.Println("Additional Installed:")
-	// TODO:
-	//  : version 1.24.1
-	//    - sqlc
-	//    - goose
-	//  : version 1.23.7
-	//    - sqlc
-	//    - goose
-	// etc.
 
-	versionList, err := fetch.FetchVersions()
+	_, err = fetch.FetchVersions()
 	if err != nil {
-		fmt.Printf("Error fetching Golang version list: %q", err)
+		fmt.Printf("Error fetching Golang version list: %q\n", err)
 		os.Exit(1)
 	}
 
 	// inventory go versions installed in webinstall path
+	GOBINPaths, err := inventory.GetInstalledGoVersionPaths()
+	if err != nil {
+		fmt.Printf("Error fetching GOBIN paths list: %q\n", err)
+		os.Exit(1)
+	}
+
+	for version, path := range GOBINPaths {
+		if version.IsEqualTo(currentVersion) {
+			continue
+		}
+
+		fmt.Println(" + Version", version.String())
+
+		binPath := filepath.Join(path, "bin")
+		toolsInstalled, err := inventory.ListToolsInGoBin(binPath)
+		if err != nil {
+			fmt.Printf("Error taking inventory in path: %q, %q\n", path, err)
+		}
+
+		for _, tool := range toolsInstalled {
+			fmt.Println("   -", tool)
+		}
+
+	}
 }
