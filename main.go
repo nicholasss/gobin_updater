@@ -108,9 +108,12 @@ func main() {
 			fmt.Printf("Error taking inventory in path: %q, %q\n", path, err)
 		}
 
-		for _, tool := range toolsInstalled {
-			fmt.Println("   -", tool)
+		if len(toolsInstalled) != 0 {
+			for _, tool := range toolsInstalled {
+				fmt.Println("   -", tool)
+			}
+		} else {
+			fmt.Println("   - No Tools installed.")
 		}
-
 	}
 }
