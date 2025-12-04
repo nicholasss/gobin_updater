@@ -1,4 +1,4 @@
-# GOBIN Updater
+# Goblin
 
 Currently a work in progress.
 
@@ -15,4 +15,4 @@ The goal is to detect the previous versions of go installed, list out the tools,
 - [ ] Check whether there is a newer version of Go.
 - [ ] Cleans out old Go-bins.
 - [ ] Cleans out old go minor versions (e.g. 1.23.2 deleted, 1.23.<latest> kept)
-- [ ]
+- [ ] Rename everything from 'gobin_updater' to 'Goblin'
